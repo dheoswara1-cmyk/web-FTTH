@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Perencanaan FTTH</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background: white !important; color: black !important; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Navbar -->
+    <header class="bg-blue-900 text-white shadow-md sticky top-0 z-50 no-print">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="bg-blue-700 p-2.5 rounded-xl shadow-inner">
+                    <i class="fa-solid fa-network-wired text-xl text-cyan-400"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight">FTTH Planner Dashboard</h1>
+                    <p class="text-xs text-blue-200">Sistem Informasi Perencanaan Jaringan Fiber Optik - Dheo Swara</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2">
+                <button onclick="resetAllData()" class="bg-red-600 hover:bg-red-700 text-white text-xs font-medium px-3 py-2 rounded-lg transition shadow flex items-center space-x-1.5 cursor-pointer">
+                    <i class="fa-solid fa-trash-can"></i>
+                    <span>Reset Data</span>
+                </button>
+                <button onclick="window.print()" class="bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-medium px-3 py-2 rounded-lg transition shadow flex items-center space-x-1.5 cursor-pointer">
+                    <i class="fa-solid fa-print"></i>
+                    <span>Cetak Laporan</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-6 space-y-6">
+
+        <!-- Notifikasi Toast -->
+        <div id="toast" class="fixed top-20 right-4 z-50 transform translate-x-full transition-transform duration-300 bg-emerald-600 text-white px-4 py-3 rounded-xl shadow-xl flex items-center space-x-3 hidden">
+            <i class="fa-solid fa-circle-check text-lg"></i>
+            <div>
+                <p id="toast-title" class="font-semibold text-sm">Berhasil!</p>
+                <p id="toast-msg" class="text-xs text-emerald-100">Data berhasil disimpan.</p>
+            </div>
+        </div>
+
+        <!-- Section 1: Header Perencanaan -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+            <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+                <h2 class="text-base font-bold text-slate-800 flex items-center space-x-2">
+                    <i class="fa-solid fa-clipboard-user text-blue-600"></i>
+                    <span>Informasi Umum Pekerjaan</span>
+                </h2>
+                <span class="text-xs bg-blue-50 text-blue-700 font-medium px-2.5 py-1 rounded-full">Header Form</span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Pembuat / Surveyor</label>
+                    <input type="text" id="projectCreator" placeholder="Contoh: Ahmad Surveyor" class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50/50">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Tanggal Pekerjaan</label>
+                    <input type="date" id="projectDate" class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50/50">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Lokasi / Area Pekerjaan</label>
+                    <input type="text" id="projectLocation" placeholder="Contoh: Cluster Melati Blok A" class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50/50">
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Rekapitulasi Statistik -->
+        <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-3">
+                <div class="bg-blue-100 text-blue-600 p-3 rounded-xl">
+                    <i class="fa-solid fa-wave-square text-lg"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-slate-500 font-medium">Total Kabel</p>
+                    <h3 id="stat-kabel" class="text-lg font-bold text-slate-800">0 m</h3>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-3">
+                <div class="bg-amber-100 text-amber-600 p-3 rounded-xl">
+                    <i class="fa-solid fa-signs-post text-lg"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-slate-500 font-medium">Total Tiang</p>
+                    <h3 id="stat-tiang" class="text-lg font-bold text-slate-800">0</h3>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-3">
+                <div class="bg-indigo-100 text-indigo-600 p-3 rounded-xl">
+                    <i class="fa-solid fa-server text-lg"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-slate-500 font-medium">Total ODC</p>
+                    <h3 id="stat-odc" class="text-lg font-bold text-slate-800">0</h3>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-3">
+                <div class="bg-teal-100 text-teal-600 p-3 rounded-xl">
+                    <i class="fa-solid fa-box-archive text-lg"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-slate-500 font-medium">Total ODP</p>
+                    <h3 id="stat-odp" class="text-lg font-bold text-slate-800">0</h3>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-3 col-span-2 sm:col-span-1">
+                <div class="bg-rose-100 text-rose-600 p-3 rounded-xl">
+                    <i class="fa-solid fa-house-chimney text-lg"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-slate-500 font-medium">Total Rumah (HP)</p>
+                    <h3 id="stat-rumah" class="text-lg font-bold text-slate-800">0</h3>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Form Input & Data Management per Kategori -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+            <div class="border-b border-slate-200 mb-6">
+                <nav class="flex space-x-2 overflow-x-auto pb-2" aria-label="Tabs">
+                    <button onclick="switchTab('kabel')" id="tab-btn-kabel" class="tab-btn whitespace-nowrap px-4 py-2 text-xs font-semibold rounded-xl bg-blue-600 text-white shadow-sm transition flex items-center space-x-2 cursor-pointer">
+                        <i class="fa-solid fa-wave-square"></i>
+                        <span>Kabel</span>
+                    </button>
+                    <button onclick="switchTab('tiang')" id="tab-btn-tiang" class="tab-btn whitespace-nowrap px-4 py-2 text-xs font-semibold rounded-xl text-slate-600 hover:bg-slate-100 transition flex items-center space-x-2 cursor-pointer">
+                        <i class="fa-solid fa-signs-post"></i>
+                        <span>Tiang</span>
+                    </button>
+                    <button onclick="switchTab('odc')" id="tab-btn-odc" class="tab-btn whitespace-nowrap px-4 py-2 text-xs font-semibold rounded-xl text-slate-600 hover:bg-slate-100 transition flex items-center space-x-2 cursor-pointer">
+                        <i class="fa-solid fa-server"></i>
+                        <span>ODC</span>
+                    </button>
+                    <button onclick="switchTab('odp')" id="tab-btn-odp" class="tab-btn whitespace-nowrap px-4 py-2 text-xs font-semibold rounded-xl text-slate-600 hover:bg-slate-100 transition flex items-center space-x-2 cursor-pointer">
+                        <i class="fa-solid fa-box-archive"></i>
+                        <span>ODP</span>
+                    </button>
+                    <button onclick="switchTab('rumah')" id="tab-btn-rumah" class="tab-btn whitespace-nowrap px-4 py-2 text-xs font-semibold rounded-xl text-slate-600 hover:bg-slate-100 transition flex items-center space-x-2 cursor-pointer">
+                        <i class="fa-solid fa-house-chimney"></i>
+                        <span>Rumah (Homepass)</span>
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Tab Content: KABEL -->
+            <div id="tab-content-kabel" class="tab-content space-y-6">
+                <form id="form-kabel" onsubmit="handleFormSubmit(event, 'kabel')" class="bg-slate-50 p-4 rounded-xl border border-slate-200 grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Jenis Kabel</label>
+                        <select id="kabel-jenis" required class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <option value="">Pilih Jenis Kabel</option>
+                            <option value="12 Core">Kabel 12 Core</option>
+                            <option value="24 Core">Kabel 24 Core</option>
+                            <option value="48 Core">Kabel 48 Core</option>
+                            <option value="Dropcable 1 Core">Dropcable 1 Core</option>
+                            <option value="Dropcable 2 Core">Dropcable 2 Core</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Panjang (Meter)</label>
+                        <input type="number" id="kabel-panjang" placeholder="Contoh: 250" required min="1" class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Lokasi / Rute Kabel</label>
+                        <input type="text" id="kabel-lokasi" placeholder="Contoh: Tiang T-01 s.d T-05" required class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs px-4 py-2.5 rounded-lg transition shadow flex items-center justify-center space-x-2 cursor-pointer">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>Tambah Kabel</span>
+                        </button>
+                    </div>
+                </form>
+
+                <div class="overflow-x-auto rounded-xl border border-slate-200">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-700 uppercase text-[10px] tracking-wider">
+                                <th class="p-3">No</th>
+                                <th class="p-3">Jenis Kabel</th>
+                                <th class="p-3">Panjang (m)</th>
+                                <th class="p-3">Lokasi / Rute</th>
+                                <th class="p-3 text-center no-print">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body-kabel" class="divide-y divide-slate-200 text-slate-600">
+                            <!-- Dinamis JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab Content: TIANG -->
+            <div id="tab-content-tiang" class="tab-content space-y-6 hidden">
+                <form id="form-tiang" onsubmit="handleFormSubmit(event, 'tiang')" class="bg-slate-50 p-4 rounded-xl border border-slate-200 grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Kode Tiang</label>
+                        <input type="text" id="tiang-kode" placeholder="Contoh: T-MLT-01" required class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Lokasi Tiang</label>
+                        <input type="text" id="tiang-lokasi" placeholder="Contoh: Depan Rumah No. 12" required class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs px-4 py-2.5 rounded-lg transition shadow flex items-center justify-center space-x-2 cursor-pointer">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>Tambah Tiang</span>
+                        </button>
+                    </div>
+                </form>
+
+                <div class="overflow-x-auto rounded-xl border border-slate-200">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-700 uppercase text-[10px] tracking-wider">
+                                <th class="p-3">No</th>
+                                <th class="p-3">Kode Tiang</th>
+                                <th class="p-3">Lokasi Tiang</th>
+                                <th class="p-3 text-center no-print">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body-tiang" class="divide-y divide-slate-200 text-slate-600">
+                            <!-- Dinamis JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab Content: ODC -->
+            <div id="tab-content-odc" class="tab-content space-y-6 hidden">
+                <form id="form-odc" onsubmit="handleFormSubmit(event, 'odc')" class="bg-slate-50 p-4 rounded-xl border border-slate-200 grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Kode ODC</label>
+                        <input type="text" id="odc-kode" placeholder="Contoh: ODC-MLT-A" required class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Lokasi ODC</label>
+                        <input type="text" id="odc-lokasi" placeholder="Contoh: Samping Pos Satpam Utama" required class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs px-4 py-2.5 rounded-lg transition shadow flex items-center justify-center space-x-2 cursor-pointer">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>Tambah ODC</span>
+                        </button>
+                    </div>
+                </form>
+
+                <div class="overflow-x-auto rounded-xl border border-slate-200">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-700 uppercase text-[10px] tracking-wider">
+                                <th class="p-3">No</th>
+                                <th class="p-3">Kode ODC</th>
+                                <th class="p-3">Lokasi ODC</th>
+                                <th class="p-3 text-center no-print">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body-odc" class="divide-y divide-slate-200 text-slate-600">
+                            <!-- Dinamis JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab Content: ODP -->
+            <div id="tab-content-odp" class="tab-content space-y-6 hidden">
+                <form id="form-odp" onsubmit="handleFormSubmit(event, 'odp')" class="bg-slate-50 p-4 rounded-xl border border-slate-200 grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Kode ODP</label>
+                        <input type="text" id="odp-kode" placeholder="Contoh: ODP-MLT-01/16" required class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Lokasi ODP</label>
+                        <input type="text" id="odp-lokasi" placeholder="Contoh: Tiang T-MLT-03" required class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs px-4 py-2.5 rounded-lg transition shadow flex items-center justify-center space-x-2 cursor-pointer">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>Tambah ODP</span>
+                        </button>
+                    </div>
+                </form>
+
+                <div class="overflow-x-auto rounded-xl border border-slate-200">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-700 uppercase text-[10px] tracking-wider">
+                                <th class="p-3">No</th>
+                                <th class="p-3">Kode ODP</th>
+                                <th class="p-3">Lokasi ODP</th>
+                                <th class="p-3 text-center no-print">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body-odp" class="divide-y divide-slate-200 text-slate-600">
+                            <!-- Dinamis JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab Content: RUMAH -->
+            <div id="tab-content-rumah" class="tab-content space-y-6 hidden">
+                <form id="form-rumah" onsubmit="handleFormSubmit(event, 'rumah')" class="bg-slate-50 p-4 rounded-xl border border-slate-200 grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Kode Rumah / Pelanggan</label>
+                        <input type="text" id="rumah-kode" placeholder="Contoh: HP-001 (Bpk. Budi)" required class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Lokasi Rumah (Alamat)</label>
+                        <input type="text" id="rumah-lokasi" placeholder="Contoh: Jl. Melati Blok A No. 10" required class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs px-4 py-2.5 rounded-lg transition shadow flex items-center justify-center space-x-2 cursor-pointer">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>Tambah Rumah</span>
+                        </button>
+                    </div>
+                </form>
+
+                <div class="overflow-x-auto rounded-xl border border-slate-200">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-700 uppercase text-[10px] tracking-wider">
+                                <th class="p-3">No</th>
+                                <th class="p-3">Kode Rumah / Pelanggan</th>
+                                <th class="p-3">Lokasi Rumah</th>
+                                <th class="p-3 text-center no-print">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body-rumah" class="divide-y divide-slate-200 text-slate-600">
+                            <!-- Dinamis JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-4 mt-auto no-print">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500">
+            <p>FTTH Planner Dashboard &bull; All Data saved automatically in LocalStorage.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // State struktur data
+        let ftthData = {
+            header: {
+                creator: '',
+                date: '',
+                location: ''
+            },
+            kabel: [],
+            tiang: [],
+            odc: [],
+            odp: [],
+            rumah: []
+        };
+
+        // Load data saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', () => {
+            loadFromLocalStorage();
+            setupHeaderListeners();
+            renderAll();
+        });
+
+        // Tab Switching Function
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('bg-blue-600', 'text-white', 'shadow-sm');
+                el.classList.add('text-slate-600', 'hover:bg-slate-100');
+            });
+
+            document.getElementById(`tab-content-${tabName}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`tab-btn-${tabName}`);
+            activeBtn.classList.remove('text-slate-600', 'hover:bg-slate-100');
+            activeBtn.classList.add('bg-blue-600', 'text-white', 'shadow-sm');
+        }
+
+        // Header input auto-save ke localStorage
+        function setupHeaderListeners() {
+            const creatorInput = document.getElementById('projectCreator');
+            const dateInput = document.getElementById('projectDate');
+            const locationInput = document.getElementById('projectLocation');
+
+            // Set default date jika kosong
+            if(!dateInput.value && !ftthData.header.date) {
+                dateInput.value = new Date().toISOString().split('T')[0];
+                ftthData.header.date = dateInput.value;
+            }
+
+            [creatorInput, dateInput, locationInput].forEach(input => {
+                input.addEventListener('input', (e) => {
+                    ftthData.header.creator = creatorInput.value;
+                    ftthData.header.date = dateInput.value;
+                    ftthData.header.location = locationInput.value;
+                    saveToLocalStorage();
+                });
+            });
+        }
+
+        // Form Submit Handler
+        function handleFormSubmit(event, category) {
+            event.preventDefault();
+            
+            let newItem = {};
+            if (category === 'kabel') {
+                newItem = {
+                    id: Date.now(),
+                    jenis: document.getElementById('kabel-jenis').value,
+                    panjang: parseFloat(document.getElementById('kabel-panjang').value) || 0,
+                    lokasi: document.getElementById('kabel-lokasi').value
+                };
+            } else if (category === 'tiang') {
+                newItem = {
+                    id: Date.now(),
+                    kode: document.getElementById('tiang-kode').value,
+                    lokasi: document.getElementById('tiang-lokasi').value
+                };
+            } else if (category === 'odc') {
+                newItem = {
+                    id: Date.now(),
+                    kode: document.getElementById('odc-kode').value,
+                    lokasi: document.getElementById('odc-lokasi').value
+                };
+            } else if (category === 'odp') {
+                newItem = {
+                    id: Date.now(),
+                    kode: document.getElementById('odp-kode').value,
+                    lokasi: document.getElementById('odp-lokasi').value
+                };
+            } else if (category === 'rumah') {
+                newItem = {
+                    id: Date.now(),
+                    kode: document.getElementById('rumah-kode').value,
+                    lokasi: document.getElementById('rumah-lokasi').value
+                };
+            }
+
+            ftthData[category].push(newItem);
+            saveToLocalStorage();
+            renderAll();
+            
+            // Reset form kategori yang bersangkutan
+            document.getElementById(`form-${category}`).reset();
+            showToast('Berhasil Ditambahkan', `Data ${category.toUpperCase()} baru berhasil disimpan.`);
+        }
+
+        // Hapus Item Data
+        function deleteItem(category, id) {
+            ftthData[category] = ftthData[category].filter(item => item.id !== id);
+            saveToLocalStorage();
+            renderAll();
+            showToast('Data Dihapus', 'Item berhasil dihapus dari daftar.', 'bg-amber-600');
+        }
+
+        // Render seluruh tabel dan statistik
+        function renderAll() {
+            // Render Header inputs from state
+            document.getElementById('projectCreator').value = ftthData.header.creator || '';
+            if(ftthData.header.date) document.getElementById('projectDate').value = ftthData.header.date;
+            document.getElementById('projectLocation').value = ftthData.header.location || '';
+
+            // Render Tabel Kabel
+            const tbodyKabel = document.getElementById('table-body-kabel');
+            tbodyKabel.innerHTML = ftthData.kabel.length === 0 ? dataEmptyTemplate(4) : ftthData.kabel.map((item, idx) => `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="p-3 font-medium">${idx + 1}</td>
+                    <td class="p-3 font-semibold text-slate-700">${escapeHtml(item.jenis)}</td>
+                    <td class="p-3">${item.panjang} meter</td>
+                    <td class="p-3">${escapeHtml(item.lokasi)}</td>
+                    <td class="p-3 text-center no-print">
+                        <button onclick="deleteItem('kabel', ${item.id})" class="text-rose-500 hover:text-rose-700 p-1.5 rounded-lg hover:bg-rose-50 transition cursor-pointer"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+
+            // Render Tabel Tiang
+            const tbodyTiang = document.getElementById('table-body-tiang');
+            tbodyTiang.innerHTML = ftthData.tiang.length === 0 ? dataEmptyTemplate(3) : ftthData.tiang.map((item, idx) => `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="p-3 font-medium">${idx + 1}</td>
+                    <td class="p-3 font-semibold text-slate-700">${escapeHtml(item.kode)}</td>
+                    <td class="p-3">${escapeHtml(item.lokasi)}</td>
+                    <td class="p-3 text-center no-print">
+                        <button onclick="deleteItem('tiang', ${item.id})" class="text-rose-500 hover:text-rose-700 p-1.5 rounded-lg hover:bg-rose-50 transition cursor-pointer"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+
+            // Render Tabel ODC
+            const tbodyOdc = document.getElementById('table-body-odc');
+            tbodyOdc.innerHTML = ftthData.odc.length === 0 ? dataEmptyTemplate(3) : ftthData.odc.map((item, idx) => `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="p-3 font-medium">${idx + 1}</td>
+                    <td class="p-3 font-semibold text-slate-700">${escapeHtml(item.kode)}</td>
+                    <td class="p-3">${escapeHtml(item.lokasi)}</td>
+                    <td class="p-3 text-center no-print">
+                        <button onclick="deleteItem('odc', ${item.id})" class="text-rose-500 hover:text-rose-700 p-1.5 rounded-lg hover:bg-rose-50 transition cursor-pointer"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+
+            // Render Tabel ODP
+            const tbodyOdp = document.getElementById('table-body-odp');
+            tbodyOdp.innerHTML = ftthData.odp.length === 0 ? dataEmptyTemplate(3) : ftthData.odp.map((item, idx) => `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="p-3 font-medium">${idx + 1}</td>
+                    <td class="p-3 font-semibold text-slate-700">${escapeHtml(item.kode)}</td>
+                    <td class="p-3">${escapeHtml(item.lokasi)}</td>
+                    <td class="p-3 text-center no-print">
+                        <button onclick="deleteItem('odp', ${item.id})" class="text-rose-500 hover:text-rose-700 p-1.5 rounded-lg hover:bg-rose-50 transition cursor-pointer"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+
+            // Render Tabel Rumah
+            const tbodyRumah = document.getElementById('table-body-rumah');
+            tbodyRumah.innerHTML = ftthData.rumah.length === 0 ? dataEmptyTemplate(3) : ftthData.rumah.map((item, idx) => `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="p-3 font-medium">${idx + 1}</td>
+                    <td class="p-3 font-semibold text-slate-700">${escapeHtml(item.kode)}</td>
+                    <td class="p-3">${escapeHtml(item.lokasi)}</td>
+                    <td class="p-3 text-center no-print">
+                        <button onclick="deleteItem('rumah', ${item.id})" class="text-rose-500 hover:text-rose-700 p-1.5 rounded-lg hover:bg-rose-50 transition cursor-pointer"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+
+            // Update Statistik
+            const totalPanjangKabel = ftthData.kabel.reduce((sum, item) => sum + (parseFloat(item.panjang) || 0), 0);
+            document.getElementById('stat-kabel').innerText = totalPanjangKabel.toLocaleString() + ' m';
+            document.getElementById('stat-tiang').innerText = ftthData.tiang.length;
+            document.getElementById('stat-odc').innerText = ftthData.odc.length;
+            document.getElementById('stat-odp').innerText = ftthData.odp.length;
+            document.getElementById('stat-rumah').innerText = ftthData.rumah.length;
+        }
+
+        // Empty row template
+        function dataEmptyTemplate(colspan) {
+            return `<tr><td colspan="${colspan}" class="p-6 text-center text-slate-400 italic">Belum ada data diinput.</td></tr>`;
+        }
+
+        // LocalStorage Helpers
+        function saveToLocalStorage() {
+            localStorage.setItem('ftth_planner_data', JSON.stringify(ftthData));
+        }
+
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem('ftth_planner_data');
+            if (saved) {
+                try {
+                    ftthData = JSON.parse(saved);
+                } catch(e) {
+                    console.error('Gagal parsing local storage', e);
+                }
+            }
+        }
+
+        function resetAllData() {
+            if (confirm('Apakah Anda yakin ingin mereset seluruh data perencanaan FTTH ini?')) {
+                localStorage.removeItem('ftth_planner_data');
+                ftthData = { header: { creator: '', date: '', location: '' }, kabel: [], tiang: [], odc: [], odp: [], rumah: [] };
+                renderAll();
+                showToast('Data Direset', 'Semua data telah dikosongkan.', 'bg-red-600');
+            }
+        }
+
+        // Toast Notification System
+        function showToast(title, message, bgClass = 'bg-emerald-600') {
+            const toast = document.getElementById('toast');
+            const titleEl = document.getElementById('toast-title');
+            const msgEl = document.getElementById('toast-msg');
+
+            toast.className = `fixed top-20 right-4 z-50 transform transition-transform duration-300 text-white px-4 py-3 rounded-xl shadow-xl flex items-center space-x-3 ${bgClass}`;
+            titleEl.innerText = title;
+            msgEl.innerText = message;
+
+            toast.classList.remove('hidden', 'translate-x-full');
+            
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+                setTimeout(() => toast.classList.add('hidden'), 300);
+            }, 3000);
+        }
+
+        // Security Escape HTML
+        function escapeHtml(str) {
+            if(!str) return '';
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
+```
